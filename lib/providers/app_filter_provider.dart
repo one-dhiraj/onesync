@@ -28,7 +28,7 @@ class AppFilterProvider extends ChangeNotifier {
     enabledPackages = saved.toSet();
 
     final installed = await FlutterDeviceApps.listApps(
-      includeSystem: false,
+      includeSystem: true,
       onlyLaunchable: true,
       includeIcons: true,
     );

@@ -1,0 +1,8 @@
+{
+  "projects": {
+    "default": "one-sync-c5f90",
+    "onesync": "onesync-analog"
+  },
+  "targets": {},
+  "etags": {}
+}

@@ -126,6 +126,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _notificationSubscription?.cancel();
     notificationService.stopListening();
 
+    await _deviceService.resetReceiveForAllDevices();
     setState(() {
       _sendEnabled = false;
     });
@@ -192,13 +193,11 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     _notificationSubscription = notificationService.notificationsStream.listen((
       data,
     ) async {
-      print("ONESYNC: inside notification listener");
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) return;
 
       if (!mounted) return;
 
-      print("ONESYNC: geting data from app info");
       final appFilterProvider = context.read<AppFilterProvider>();
       if (!appFilterProvider.enabledPackages.contains(data["packageName"]) ||
           data["packageName"] == "com.analog.onesync")
@@ -209,7 +208,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       final app = appFilterProvider.appMap[data["packageName"]];
       final appName = app?.name ?? data["packageName"];
       
-      print("ONESYNC: trying to send notif");
       final sender = NotificationSender();
       await sender.sendNotification(
         app: appName,

@@ -30,6 +30,22 @@ class DeviceService {
 
   bool _initialized = false;
 
+  void setupDeviceSync() {
+    if (_initialized) return;
+    _initialized = true;
+
+    // Step 1: Ensure device is registered
+    registerDevice();
+
+    // Step 2: Reset session flags (important for your design)
+    resetConnectionFlags();
+
+    // Step 3: Listen for token refresh
+    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
+      updateToken(newToken);
+    });
+  }
+  
   Future<void> registerDevice() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -111,22 +127,6 @@ class DeviceService {
         .update({"token": newToken, "updatedAt": FieldValue.serverTimestamp()});
   }
 
-  void setupDeviceSync() {
-    if (_initialized) return;
-    _initialized = true;
-
-    // Step 1: Ensure device is registered
-    registerDevice();
-
-    // Step 2: Reset session flags (important for your design)
-    resetConnectionFlags();
-
-    // Step 3: Listen for token refresh
-    FirebaseMessaging.instance.onTokenRefresh.listen((newToken) {
-      updateToken(newToken);
-    });
-  }
-
   Future<void> deactivateCurrentDevice() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) return;
@@ -143,6 +143,25 @@ class DeviceService {
           "canReceive": false,
           "updatedAt": FieldValue.serverTimestamp(),
         });
+  }
+
+  Future<void> resetReceiveForAllDevices() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) return;
+
+    final devicesSnapshot = await _firestore
+      .collection('users')
+      .doc(user.uid)
+      .collection('devices')
+      .get();
+
+    WriteBatch batch = FirebaseFirestore.instance.batch();
+
+    for (var doc in devicesSnapshot.docs) {
+      batch.update(doc.reference, {'canReceive': false});
+    }
+
+    await batch.commit();
   }
 }
 
